@@ -8,6 +8,8 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/gorilla/mux"
+
 	_ "github.com/lib/pq"
 )
 
@@ -22,19 +24,24 @@ var db *sql.DB
 // )
 const (
 	dbhost = "localhost"
-	dbport = "5433"
+	dbport = "5432"
 	dbuser = "postgres"
 	dbpass = "2705"
-	dbname = "dms"
+	dbname = "userinfo"
 )
+
+func handlerRequest() {
+	myRouter := mux.NewRouter().StrictSlash(true)
+	myRouter.HandleFunc("/api/index", indexHandler)
+	myRouter.HandleFunc("/api/foo", foo)
+	myRouter.HandleFunc("/api/test", testHandler)
+	log.Fatal(http.ListenAndServe("localhost:8000", myRouter))
+}
 
 func main() {
 	initDb()
 	defer db.Close()
-	http.HandleFunc("/api/index", indexHandler)
-	http.HandleFunc("/api/foo", foo)
-	// http.HandleFunc("/api/repo/", repoHandler)
-	log.Fatal(http.ListenAndServe("localhost:8000", nil))
+	handlerRequest()
 }
 
 func initDb() {
@@ -91,10 +98,10 @@ func dbConfig() map[string]string {
 
 // repository contains the details of a repository
 type repositorySummary struct {
-	UserID       string
-	UserName     string
-	UserGroup    string
-	UserPassword string
+	UserID       string `json:"user_id"`
+	UserName     string `json:"user_name"`
+	UserGroup    string `json:"user_group"`
+	UserPassword string `json:"user_password"`
 }
 
 type repositories struct {
@@ -104,7 +111,8 @@ type repositories struct {
 // indexHandler calls `queryRepos()` and marshals the result as JSON
 func indexHandler(w http.ResponseWriter, req *http.Request) {
 	repos := repositories{}
-	err := queryRepos(&repos)
+	err := queryReposGet(&repos)
+	fmt.Println(repos)
 	if err != nil {
 		http.Error(w, err.Error(), 500)
 		return
@@ -118,12 +126,33 @@ func indexHandler(w http.ResponseWriter, req *http.Request) {
 	fmt.Fprintf(w, string(out))
 }
 
+func testHandler(w http.ResponseWriter, r *http.Request) {
+	var p repositorySummary
+	repos := repositories{}
+	err := json.NewDecoder(r.Body).Decode(&p)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	err2 := queryReposPost(&repos, p.UserID)
+	if err2 != nil {
+		http.Error(w, err.Error(), 500)
+		return
+	}
+	out, err3 := json.Marshal(repos)
+	if err3 != nil {
+		http.Error(w, err.Error(), 500)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	fmt.Println(out)
+	fmt.Fprintf(w, string(out))
+}
+
 // queryRepos first fetches the repositories data from the db
-func queryRepos(repos *repositories) error {
-	rows, err := db.Query(`
-		SELECT user_id, user_username, user_password
-		FROM tbl_users
-		`)
+func queryReposPost(repos *repositories, id string) error {
+	rows, err := db.Query("SELECT user_id, user_name, user_password FROM information WHERE user_id = $1",
+		id)
 	if err != nil {
 		return err
 	}
@@ -133,6 +162,35 @@ func queryRepos(repos *repositories) error {
 		err = rows.Scan(
 			&repo.UserID,
 			&repo.UserName,
+			&repo.UserPassword,
+		)
+		if err != nil {
+			return err
+		}
+		repos.Repositories = append(repos.Repositories, repo)
+	}
+	fmt.Println(repos.Repositories)
+	err = rows.Err()
+	if err != nil {
+		return err
+	}
+	return nil
+
+}
+func queryReposGet(repos *repositories) error {
+	rows, err := db.Query(`
+		SELECT user_id, user_name, user_group, user_password FROM information 
+	`)
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		repo := repositorySummary{}
+		err = rows.Scan(
+			&repo.UserID,
+			&repo.UserName,
+			&repo.UserGroup,
 			&repo.UserPassword,
 		)
 		if err != nil {
