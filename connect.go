@@ -175,7 +175,6 @@ func queryReposPost(repos *repositories, id string) error {
 		return err
 	}
 	return nil
-
 }
 func queryReposGet(repos *repositories) error {
 	rows, err := db.Query(`
