@@ -44,6 +44,12 @@ func main() {
 	handlerRequest()
 }
 
+func setHeader(w *http.ResponseWriter, req *http.Request) {
+	(*w).Header().Set("Access-Control-Allow-Origin", "*")
+	(*w).Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
+	(*w).Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
+}
+
 func initDb() {
 	// config := dbConfig()
 	var err error
@@ -110,6 +116,7 @@ type repositories struct {
 
 // indexHandler calls `queryRepos()` and marshals the result as JSON
 func indexHandler(w http.ResponseWriter, req *http.Request) {
+	setHeader(&w, req)
 	repos := repositories{}
 	err := queryReposGet(&repos)
 	fmt.Println(repos)
@@ -123,10 +130,12 @@ func indexHandler(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 	fmt.Println(out)
+	w.Header().Set("Content-type", "application/json")
 	fmt.Fprintf(w, string(out))
 }
 
 func testHandler(w http.ResponseWriter, r *http.Request) {
+	setHeader(&w, r)
 	var p repositorySummary
 	repos := repositories{}
 	err := json.NewDecoder(r.Body).Decode(&p)
@@ -134,7 +143,7 @@ func testHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	err2 := queryReposPost(&repos, p.UserID)
+	err2 := queryReposPost(&repos, p.UserGroup)
 	if err2 != nil {
 		http.Error(w, err.Error(), 500)
 		return
@@ -144,15 +153,15 @@ func testHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), 500)
 		return
 	}
-	w.Header().Set("Content-Type", "application/json")
 	fmt.Println(out)
+	w.Header().Set("Content-Type", "application/json")
 	fmt.Fprintf(w, string(out))
 }
 
 // queryRepos first fetches the repositories data from the db
-func queryReposPost(repos *repositories, id string) error {
-	rows, err := db.Query("SELECT user_id, user_name, user_password FROM information WHERE user_id = $1",
-		id)
+func queryReposPost(repos *repositories, group string) error {
+	rows, err := db.Query(`SELECT user_id, user_name, user_group, user_password FROM information WHERE user_group = $1`,
+		group)
 	if err != nil {
 		return err
 	}
@@ -162,6 +171,7 @@ func queryReposPost(repos *repositories, id string) error {
 		err = rows.Scan(
 			&repo.UserID,
 			&repo.UserName,
+			&repo.UserGroup,
 			&repo.UserPassword,
 		)
 		if err != nil {
@@ -205,13 +215,13 @@ func queryReposGet(repos *repositories) error {
 	return nil
 }
 
-//
+//Profile To Test
 type Profile struct {
 	Name    string
 	Hobbies []string
 }
 
-//
+//People To Test
 type People struct {
 	Profile []Profile
 }
