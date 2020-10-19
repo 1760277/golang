@@ -103,3 +103,25 @@ create table customer(
 	CONSTRAINT fk_branch FOREIGN KEY(branch_number) REFERENCES branch(branch_number),
 	CONSTRAINT fk_sales FOREIGN KEY(agent_id) REFERENCES sales(agent_id)
 );
+
+CREATE TABLE public.sales
+(
+    agent_id character varying COLLATE pg_catalog."default" NOT NULL,
+    company_id character varying COLLATE pg_catalog."default",
+    agent_name character varying COLLATE pg_catalog."default" NOT NULL,
+    agent_password character varying COLLATE pg_catalog."default" NOT NULL,
+    agent_mail_address character varying COLLATE pg_catalog."default",
+    agent_registration_time time without time zone,
+    agent_password_init_flag boolean,
+    create_date date,
+    update_date date,
+    update_pmg_id character varying COLLATE pg_catalog."default",
+    request_id character varying COLLATE pg_catalog."default",
+    version character varying COLLATE pg_catalog."default",
+    CONSTRAINT sales_pkey PRIMARY KEY (agent_id),
+    CONSTRAINT sales_agent_name_key UNIQUE (agent_name),
+    CONSTRAINT fk_company FOREIGN KEY (company_id)
+        REFERENCES public.company (company_id) MATCH SIMPLE
+        ON UPDATE NO ACTION
+        ON DELETE NO ACTION
+)

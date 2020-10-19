@@ -22,12 +22,13 @@ var db *sql.DB
 // 	dbpass = "DBPASS"
 // 	dbname = "DBNAME"
 // )
+
 const (
 	dbhost = "localhost"
 	dbport = "5432"
 	dbuser = "postgres"
 	dbpass = "2705"
-	dbname = "userinfo"
+	dbname = "dms"
 )
 
 func handlerRequest() {
@@ -35,6 +36,7 @@ func handlerRequest() {
 	myRouter.HandleFunc("/api/index", indexHandler)
 	myRouter.HandleFunc("/api/foo", foo)
 	myRouter.HandleFunc("/api/test", testHandler)
+	myRouter.HandleFunc("/api/allcustomer", getAllCustomer)
 	log.Fatal(http.ListenAndServe("localhost:8000", myRouter))
 }
 
@@ -102,11 +104,101 @@ func dbConfig() map[string]string {
 	return conf
 }
 
-// repository contains the details of a repository
+// CustomerSummary contains the details of a repository
+type CustomerSummary struct {
+	ComsumerID       string `json:"consumer_id"`
+	CompanyID        string `json:"company_id" `
+	Name             string `json:"consumer_name"`
+	NameKaNa         string `json:"name_kana"`
+	Birth            string `json:"consumer_birth"`
+	PhoneNumber1     string `json:"phone_number"`
+	PhoneNumber2     string `json:"phone_number_2"`
+	MailAddress      string `json:"mai_address"`
+	PostalCode       string `json:"postal_code"`
+	Address          string `json:"comsumer_address"`
+	BranchNumber     string `json:"branch_number"`
+	AgentID          string `json:"agent_id"`
+	RegistrationDate string `json:"registration_date"`
+	CreateDate       string `json:"create_date"`
+	UpdateDate       string `json:"update_date"`
+	PmgID            string `json:"request_id"`
+	Version          string `json:"version"`
+}
+
+//Customers content list of customer info
+type Customers struct {
+	Customers []CustomerSummary
+}
+
+func getAllCustomer(w http.ResponseWriter, r *http.Request) {
+	setHeader(&w, r)
+	repos := Customers{}
+	err := queryAllCustomer(&repos)
+	fmt.Println(repos)
+	if err != nil {
+		http.Error(w, err.Error(), 500)
+		return
+	}
+	out, err := json.Marshal(repos)
+	if err != nil {
+		http.Error(w, err.Error(), 500)
+		return
+	}
+	fmt.Println(out)
+	w.Header().Set("Content-type", "application/json")
+	fmt.Fprintf(w, string(out))
+}
+
+func queryAllCustomer(repos *Customers) error {
+	rows, err := db.Query(`
+		SELECT * FROM customer 
+	`)
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		repo := CustomerSummary{}
+		err = rows.Scan(
+			&repo.ComsumerID,
+			&repo.CompanyID,
+			&repo.Name,
+			&repo.NameKaNa,
+			&repo.Birth,
+			&repo.PhoneNumber1,
+			&repo.PhoneNumber2,
+			&repo.MailAddress,
+			&repo.PostalCode,
+			&repo.Address,
+			&repo.BranchNumber,
+			&repo.AgentID,
+			&repo.RegistrationDate,
+			&repo.CreateDate,
+			&repo.UpdateDate,
+			&repo.PmgID,
+			&repo.Version,
+		)
+		if err != nil {
+			return err
+		}
+		repos.Customers = append(repos.Customers, repo)
+	}
+	fmt.Println(repos.Customers)
+	err = rows.Err()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func register(repo *CustomerSummary, username string, password, string) error {
+
+}
+
 type repositorySummary struct {
 	UserID       string `json:"user_id"`
-	UserName     string `json:"user_name"`
 	UserGroup    string `json:"user_group"`
+	UserName     string `json:"user"`
 	UserPassword string `json:"user_password"`
 }
 
