@@ -37,7 +37,7 @@ func handlerRequest() {
 	myRouter.HandleFunc("/api/foo", foo)
 	myRouter.HandleFunc("/api/test", testHandler)
 	myRouter.HandleFunc("/api/allcustomer", getAllCustomer)
-	log.Fatal(http.ListenAndServe("localhost:8000", myRouter))
+	log.Fatal(http.ListenAndServe("192.168.11.75:8000", myRouter))
 }
 
 func main() {
@@ -191,15 +191,9 @@ func queryAllCustomer(repos *Customers) error {
 	return nil
 }
 
-func register(repo *CustomerSummary, username string, password, string) error {
-	
-}
-
 type repositorySummary struct {
-	UserID       string `json:"user_id"`
-	UserGroup    string `json:"user_group"`
-	UserName     string `json:"user"`
-	UserPassword string `json:"user_password"`
+	ConsumerID   string `json:"consumer_id"`
+	ConsumerName string `json:"consumer_name"`
 }
 
 type repositories struct {
@@ -232,10 +226,11 @@ func testHandler(w http.ResponseWriter, r *http.Request) {
 	repos := repositories{}
 	err := json.NewDecoder(r.Body).Decode(&p)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		fmt.Println("0100004050109")
+		http.Error(w, "0100004050109", http.StatusBadRequest)
 		return
 	}
-	err2 := queryReposPost(&repos, p.UserGroup)
+	err2 := queryReposPost(&repos, p.ConsumerID)
 	if err2 != nil {
 		http.Error(w, err.Error(), 500)
 		return
@@ -251,9 +246,9 @@ func testHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // queryRepos first fetches the repositories data from the db
-func queryReposPost(repos *repositories, group string) error {
-	rows, err := db.Query(`SELECT user_id, user_name, user_group, user_password FROM information WHERE user_group = $1`,
-		group)
+func queryReposPost(repos *repositories, id string) error {
+	rows, err := db.Query(`SELECT consumer_id, consumer_name FROM customer WHERE consumer_id = $1`,
+		id)
 	if err != nil {
 		return err
 	}
@@ -261,10 +256,8 @@ func queryReposPost(repos *repositories, group string) error {
 	for rows.Next() {
 		repo := repositorySummary{}
 		err = rows.Scan(
-			&repo.UserID,
-			&repo.UserName,
-			&repo.UserGroup,
-			&repo.UserPassword,
+			&repo.ConsumerID,
+			&repo.ConsumerName,
 		)
 		if err != nil {
 			return err
@@ -290,10 +283,8 @@ func queryReposGet(repos *repositories) error {
 	for rows.Next() {
 		repo := repositorySummary{}
 		err = rows.Scan(
-			&repo.UserID,
-			&repo.UserName,
-			&repo.UserGroup,
-			&repo.UserPassword,
+			&repo.ConsumerID,
+			&repo.ConsumerName,
 		)
 		if err != nil {
 			return err
