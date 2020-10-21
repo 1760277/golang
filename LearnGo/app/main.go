@@ -4,5 +4,5 @@ import "app/configs"
 
 func main() {
 	r := configs.SetupRoute()
-	r.Run(":3030")
+	r.Run(":8000")
 }

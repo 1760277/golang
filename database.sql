@@ -36,10 +36,10 @@ create table administrator(
 	update_date DATE,
 	update_pmg_id VARCHAR,
 	request_id VARCHAR,
-	version VARCHAR,
-	CONSTRAINT fk_company 
-	FOREIGN KEY(company_id) 
-	REFERENCES company(company_id)
+	version VARCHAR
+	-- CONSTRAINT fk_company 
+	-- FOREIGN KEY(company_id) 
+	-- REFERENCES company(company_id)
 );
 
 create table token(

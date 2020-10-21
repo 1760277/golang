@@ -1,9 +1,5 @@
 package models
 
-import (
-	"database/sql"
-)
-
 // NullTime type
 // type NullTime time.Time
 
@@ -38,12 +34,13 @@ import (
 
 // User entity
 type User struct {
-	UserID      string         `json:"id"`
-	Username    string         `json:"user_name"`
-	Password    string         `json:"password"`
-	Status      bool           `json:"status"`
-	CreatedDate sql.NullTime   `json:"created_date"`
-	CreatedBy   sql.NullString `json:"created_by"`
-	UpdatedDate sql.NullTime   `json:"updated_date"`
-	UpdatedBy   sql.NullString `json:"updated_by"`
+	AdminID       string `json:"admin_id"`
+	AdminName     string `json:"admin_name"`
+	AdminPassword string `json:"admin_password"`
+	// Password    string         `json:"password"`
+	// Status      bool           `json:"status"`
+	// CreatedDate sql.NullTime   `json:"created_date"`
+	// CreatedBy   sql.NullString `json:"created_by"`
+	// UpdatedDate sql.NullTime   `json:"updated_date"`
+	// UpdatedBy   sql.NullString `json:"updated_by"`
 }

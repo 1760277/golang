@@ -3,6 +3,7 @@ package apis
 import (
 	"app/models"
 	conn "app/services"
+	"fmt"
 	"log"
 	"reflect"
 	"strconv"
@@ -14,7 +15,7 @@ import (
 // GetUser all
 func GetUser(c *gin.Context) {
 	db := conn.Connectdb()
-	rows, err := db.Query("select * from xl_user")
+	rows, err := db.Query("select admin_id, admin_name, admin_password from administrator")
 
 	if err != nil {
 		c.JSON(500, gin.H{
@@ -45,7 +46,45 @@ func GetUser(c *gin.Context) {
 	defer db.Close()
 }
 
-// AddUser to DB
+// GetUserById To Get Admin By Id
+func GetUserById(c *gin.Context) {
+	var user models.User
+	err := c.ShouldBindJSON(&user)
+	if err != nil {
+		c.JSON(500, gin.H{
+			"error": err,
+		})
+		return
+	}
+
+	db := conn.Connectdb()
+	rows, err := db.Query(`select admin_id, admin_name, admin_password from administrator where admin_id = $1`, user.AdminID)
+
+	var users []models.User
+	for rows.Next() {
+		user := models.User{}
+		s := reflect.ValueOf(&user).Elem()
+		numCols := s.NumField()
+		columns := make([]interface{}, numCols)
+		for i := 0; i < numCols; i++ {
+			field := s.Field(i)
+			columns[i] = field.Addr().Interface()
+		}
+		err = rows.Scan(columns...)
+		if err != nil {
+			log.Fatal(err)
+			return
+		}
+		users = append(users, user)
+	}
+
+	c.JSON(200, users)
+	defer db.Close()
+
+	// insertUser.Exec(user.Username, user.Password, user.Status)
+}
+
+//AddUser to DB
 func AddUser(c *gin.Context) {
 	var user models.User
 	var res models.User
@@ -58,7 +97,7 @@ func AddUser(c *gin.Context) {
 	}
 
 	db := conn.Connectdb()
-	rows := db.QueryRow(`insert into xl_user (user_name, password, status) values ($1, $2, $3) returning *;`, user.Username, user.Password, user.Status)
+	rows := db.QueryRow(`insert into administrator (admin_id, admin_name, admin_password) values ($1, $2, $3) returning *;`, user.AdminID, user.AdminName, user.AdminPassword)
 
 	res = models.User{}
 	s := reflect.ValueOf(&res).Elem()
@@ -68,21 +107,23 @@ func AddUser(c *gin.Context) {
 		field := s.Field(i)
 		columns[i] = field.Addr().Interface()
 	}
+
 	err = rows.Scan(columns...)
 	if err != nil {
+		fmt.Println(err)
 		c.JSON(500, gin.H{
 			"messages": err,
 		})
 		return
 	}
 
-	//insertUser.Exec(user.Username, user.Password, user.Status)
+	// insertUser.Exec(user.Username, user.Password, user.Status)
 
 	c.JSON(200, res)
 	defer db.Close()
 }
 
-// LoginUser authentication
+//LoginUser authentication
 func LoginUser(c *gin.Context) {
 	var user models.User
 	err := c.ShouldBindJSON(&user)
@@ -94,7 +135,7 @@ func LoginUser(c *gin.Context) {
 	}
 
 	db := conn.Connectdb()
-	rows, err := db.Query(`select user_id from xl_user where user_name = $1 and password = $2`, user.Username, user.Password)
+	rows, err := db.Query(`select consumer_id from customer where consumer_id = $1 and password = $2`, user.AdminID, user.AdminPassword)
 
 	if err != nil {
 		c.JSON(500, gin.H{
@@ -127,7 +168,7 @@ func LoginUser(c *gin.Context) {
 	}
 }
 
-// UpdateUser to DB
+//UpdateUser to DB
 func UpdateUser(c *gin.Context) {
 	var user models.User
 	var res models.User
@@ -140,8 +181,8 @@ func UpdateUser(c *gin.Context) {
 	}
 
 	db := conn.Connectdb()
-	rows := db.QueryRow(`Update xl_user set status = $1 where user_id = $2 returning *;`,
-		user.Status, user.UserID)
+	rows := db.QueryRow(`Update administrator set admin_password = $1 where admin_id = $2 returning *;`,
+		user.AdminPassword, user.AdminID)
 
 	res = models.User{}
 	s := reflect.ValueOf(&res).Elem()
@@ -163,9 +204,9 @@ func UpdateUser(c *gin.Context) {
 	defer db.Close()
 }
 
-// DeleteUser to DB
+//DeleteUser to DB
 func DeleteUser(c *gin.Context) {
-	userID, err := strconv.Atoi(c.Param("id"))
+	userID, err := strconv.Atoi(c.Param("admin_id"))
 	if err != nil {
 		c.JSON(500, gin.H{
 			"error": "ID incorrect",
@@ -174,7 +215,7 @@ func DeleteUser(c *gin.Context) {
 	}
 
 	db := conn.Connectdb()
-	_, error := db.Exec(`Delete from xl_user where user_id = $1`, userID)
+	_, error := db.Exec(`Delete from administrator where admin_id = $1`, userID)
 
 	if error != nil {
 		c.JSON(500, gin.H{

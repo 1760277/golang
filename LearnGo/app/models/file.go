@@ -8,4 +8,5 @@ type File struct {
 	ID             string `json:"file_id" form:"file_id" query:"file_id"`
 	RegisteredDate string `json:"file_created_at" form:"file_created_at" query:"file_created_at"`
 	PageNum        int    `json:"file_total_pages" form:"file_total_pages" query:"file_total_pages"`
+	AgentID        string `json:"agent_id" form:"agent_id" query:"agent_id"`
 }

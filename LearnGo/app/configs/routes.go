@@ -20,11 +20,13 @@ func SetupRoute() *gin.Engine {
 
 	client := r.Group("/api")
 	{
-		client.GET("/user", userController.GetUser)
+		client.GET("/users", userController.GetUser)
+		client.POST("/user", userController.GetUserById)
 		client.POST("/user/add", userController.AddUser)
 		client.POST("/user/login", userController.LoginUser)
 		client.POST("/user/update", userController.UpdateUser)
 		client.DELETE("/user/del/:id", userController.DeleteUser)
+		client.POST("/file/test", userController.GetFile)
 	}
 
 	return r
