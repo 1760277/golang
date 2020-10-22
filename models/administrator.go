@@ -32,15 +32,15 @@ package models
 // //NullString type
 // type NullString string
 
-// User entity
-type User struct {
+// Administrator Summary
+type Administrator struct {
 	AdminID       string `json:"admin_id"`
 	AdminName     string `json:"admin_name"`
 	AdminPassword string `json:"admin_password"`
-	// Password    string         `json:"password"`
-	// Status      bool           `json:"status"`
-	// CreatedDate sql.NullTime   `json:"created_date"`
-	// CreatedBy   sql.NullString `json:"created_by"`
-	// UpdatedDate sql.NullTime   `json:"updated_date"`
-	// UpdatedBy   sql.NullString `json:"updated_by"`
+	// AdminEmail    string `json:"admin_email"`
+}
+
+//Administrators content list of Administrator
+type Administrators struct {
+	Administrators []Administrator
 }
