@@ -1,7 +1,7 @@
 package configs
 
 import (
-	userController "app/apis"
+	"app/apis"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -20,9 +20,9 @@ func SetupRoute() *gin.Engine {
 
 	client := r.Group("/v1")
 	{
-		client.GET("/consumers", userController.GetAllCustomer)
-		client.POST("/consumer", userController.GetCustomerByID)
-		client.POST("/admin", userController.GetAdminByID)
+		client.GET("/consumers", apis.GetAllConsumer)
+		client.POST("/consumer", apis.GetConsumerByID)
+		client.POST("/admin", apis.GetEmployeeByID)
 		// client.POST("/user/add", userController.AddUser)
 		// client.POST("/user/login", userController.LoginUser)
 		// client.POST("/user/update", userController.UpdateUser)

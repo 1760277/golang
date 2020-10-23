@@ -10,13 +10,14 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
-	_ "github.com/lib/pq" // postgres
+	// _ "github.com/go-sql-driver/mysql"
+	// _ "github.com/lib/pq" // postgres
 )
 
-// GetAllCustomer (get all user customer)
-func GetAllCustomer(c *gin.Context) {
+// GetAllConsumer (get all user Consumer)
+func GetAllConsumer(c *gin.Context) {
 	db := conn.Connectdb()
-	rows, err := db.Query("select consumer_id, consumer_name, consumer_password, phone_number1 from customer")
+	rows, err := db.Query("select consumer_id, company_id, consumer_name, phone_number_1 from consumer")
 
 	if err != nil {
 		c.JSON(500, gin.H{
@@ -26,9 +27,9 @@ func GetAllCustomer(c *gin.Context) {
 		return
 	}
 
-	var users models.Customers
+	var users models.Consumers
 	for rows.Next() {
-		user := models.Customer{}
+		user := models.Consumer{}
 		s := reflect.ValueOf(&user).Elem()
 		numCols := s.NumField()
 		columns := make([]interface{}, numCols)
@@ -41,17 +42,15 @@ func GetAllCustomer(c *gin.Context) {
 			log.Fatal(err)
 			return
 		}
-		users.Customers = append(users.Customers, user)
+		users.Consumers = append(users.Consumers, user)
 	}
-	fmt.Println(users)
-
 	c.JSON(200, users)
 	defer db.Close()
 }
 
-//GetCustomerByID (get customer user by id)
-func GetCustomerByID(c *gin.Context) {
-	var user models.Customer
+//GetConsumerByID (get Consumer user by id)
+func GetConsumerByID(c *gin.Context) {
+	var user models.Consumer
 	err := c.ShouldBindJSON(&user)
 	if err != nil {
 		c.JSON(500, gin.H{
@@ -62,11 +61,11 @@ func GetCustomerByID(c *gin.Context) {
 	}
 
 	db := conn.Connectdb()
-	rows, err := db.Query(`select consumer_id, consumer_name, consumer_password, phone_number1 from customer where consumer_id = $1`, user.ConsumerID)
+	rows, err := db.Query(`select consumer_id, consumer_name, consumer_password, phone_number1 from Consumer where consumer_id = $1`, user.ConsumerID)
 
-	var users models.Customers
+	var users models.Consumers
 	for rows.Next() {
-		user := models.Customer{}
+		user := models.Consumer{}
 		s := reflect.ValueOf(&user).Elem()
 		numCols := s.NumField()
 		columns := make([]interface{}, numCols)
@@ -79,7 +78,7 @@ func GetCustomerByID(c *gin.Context) {
 			log.Fatal(err)
 			return
 		}
-		users.Customers = append(users.Customers, user)
+		users.Consumers = append(users.Consumers, user)
 	}
 
 	c.JSON(200, users)
@@ -88,10 +87,10 @@ func GetCustomerByID(c *gin.Context) {
 	// insertUser.Exec(user.Username, user.Password, user.Status)
 }
 
-//AddCustomer (insert new customer user in database)
-func AddCustomer(c *gin.Context) {
-	var user models.Customer
-	var res models.Customer
+//AddConsumer (insert new Consumer user in database)
+func AddConsumer(c *gin.Context) {
+	var user models.Consumer
+	var res models.Consumer
 	err := c.ShouldBindJSON(&user)
 	if err != nil {
 		c.JSON(500, gin.H{
@@ -101,9 +100,9 @@ func AddCustomer(c *gin.Context) {
 	}
 
 	db := conn.Connectdb()
-	rows := db.QueryRow(`insert into customer (consumer_id, consumer_name, consumer_password, phone_number1) values ($1, $2, $3, $4) returning *;`, user.ConsumerID, user.ConsumerName, user.ConsumerPassword, user.Phone1)
+	rows := db.QueryRow(`insert into Consumer (consumer_id, consumer_name, consumer_password, phone_number1) values ($1, $2, $3, $4) returning *;`, user.ConsumerID, user.ConsumerName, user.CompanyID, user.Phone1)
 
-	res = models.Customer{}
+	res = models.Consumer{}
 	s := reflect.ValueOf(&res).Elem()
 	numCols := s.NumField()
 	columns := make([]interface{}, numCols)
@@ -127,9 +126,9 @@ func AddCustomer(c *gin.Context) {
 	defer db.Close()
 }
 
-//LoginCustomer (authentication for customer user)
-func LoginCustomer(c *gin.Context) {
-	var user models.Customer
+//LoginConsumer (authentication for Consumer user)
+func LoginConsumer(c *gin.Context) {
+	var user models.Consumer
 	err := c.ShouldBindJSON(&user)
 	if err != nil {
 		c.JSON(500, gin.H{
@@ -139,7 +138,7 @@ func LoginCustomer(c *gin.Context) {
 	}
 
 	db := conn.Connectdb()
-	rows, err := db.Query(`select consumer_id from customer where consumer_id = $1 and consumer_password = $2`, user.ConsumerID, user.ConsumerPassword)
+	rows, err := db.Query(`select consumer_id from Consumer where consumer_id = $1`, user.ConsumerID)
 
 	if err != nil {
 		c.JSON(500, gin.H{
@@ -172,10 +171,10 @@ func LoginCustomer(c *gin.Context) {
 	}
 }
 
-//UpdateCustomer (update information for user customer)
-func UpdateCustomer(c *gin.Context) {
-	var user models.Customer
-	var res models.Customer
+//UpdateConsumer (update information for user Consumer)
+func UpdateConsumer(c *gin.Context) {
+	var user models.Consumer
+	var res models.Consumer
 	err := c.ShouldBindJSON(&user)
 	if err != nil {
 		c.JSON(500, gin.H{
@@ -185,10 +184,10 @@ func UpdateCustomer(c *gin.Context) {
 	}
 
 	db := conn.Connectdb()
-	rows := db.QueryRow(`Update customer set consumer_password = $1 where consumer_id = $2 returning *;`,
-		user.ConsumerPassword, user.ConsumerID)
+	rows := db.QueryRow(`Update Consumer set company_id = $1 where consumer_id = $2 returning *;`,
+		user.CompanyID, user.ConsumerID)
 
-	res = models.Customer{}
+	res = models.Consumer{}
 	s := reflect.ValueOf(&res).Elem()
 	numCols := s.NumField()
 	columns := make([]interface{}, numCols)
@@ -208,8 +207,8 @@ func UpdateCustomer(c *gin.Context) {
 	defer db.Close()
 }
 
-//DeleteCustomer (delete customer user)
-func DeleteCustomer(c *gin.Context) {
+//DeleteConsumer (delete Consumer user)
+func DeleteConsumer(c *gin.Context) {
 	userID, err := strconv.Atoi(c.Param("consumer_id"))
 	if err != nil {
 		c.JSON(500, gin.H{
@@ -219,7 +218,7 @@ func DeleteCustomer(c *gin.Context) {
 	}
 
 	db := conn.Connectdb()
-	_, error := db.Exec(`Delete from Customer where consumer_id = $1`, userID)
+	_, error := db.Exec(`Delete from Consumer where consumer_id = $1`, userID)
 
 	if error != nil {
 		c.JSON(500, gin.H{

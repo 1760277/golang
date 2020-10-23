@@ -9,13 +9,14 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
-	_ "github.com/lib/pq" // postgres
+	// _ "github.com/go-sql-driver/mysql"
+	// _ "github.com/lib/pq" // postgres
 )
 
-//GetAllAdmin (get all user admin in database)
-func GetAllAdmin(c *gin.Context) {
+//GetAllEmployees (get all user admin in database)
+func GetAllEmployees(c *gin.Context) {
 	db := conn.Connectdb()
-	rows, err := db.Query("select admin_id, admin_name, admin_password from administrator")
+	rows, err := db.Query("select employee_id, employee_id, login_password from employee")
 
 	if err != nil {
 		c.JSON(500, gin.H{
@@ -24,9 +25,9 @@ func GetAllAdmin(c *gin.Context) {
 		return
 	}
 
-	var users models.Administrators
+	var users models.Employees
 	for rows.Next() {
-		user := models.Administrator{}
+		user := models.Employee{}
 		s := reflect.ValueOf(&user).Elem()
 		numCols := s.NumField()
 		columns := make([]interface{}, numCols)
@@ -39,16 +40,16 @@ func GetAllAdmin(c *gin.Context) {
 			log.Fatal(err)
 			return
 		}
-		users.Administrators = append(users.Administrators, user)
+		users.Employees = append(users.Employees, user)
 	}
 
 	c.JSON(200, users)
 	defer db.Close()
 }
 
-//GetAdminByID (get admin user by id)
-func GetAdminByID(c *gin.Context) {
-	var user models.Administrator
+//GetEmployeeByID (get admin user by id)
+func GetEmployeeByID(c *gin.Context) {
+	var user models.Employee
 	err := c.ShouldBindJSON(&user)
 	if err != nil {
 		c.JSON(500, gin.H{
@@ -58,11 +59,11 @@ func GetAdminByID(c *gin.Context) {
 	}
 
 	db := conn.Connectdb()
-	rows, err := db.Query(`select admin_id, admin_name, admin_password from administrator where admin_id = $1`, user.AdminID)
+	rows, err := db.Query(`select employee_id, employee_name, employee_password from employee where employee_id = $1`, user.EmployeeID)
 
-	var users models.Administrators
+	var users models.Employees
 	for rows.Next() {
-		user := models.Administrator{}
+		user := models.Employee{}
 		s := reflect.ValueOf(&user).Elem()
 		numCols := s.NumField()
 		columns := make([]interface{}, numCols)
@@ -75,7 +76,7 @@ func GetAdminByID(c *gin.Context) {
 			log.Fatal(err)
 			return
 		}
-		users.Administrators = append(users.Administrators, user)
+		users.Employees = append(users.Employees, user)
 	}
 
 	c.JSON(200, users)
@@ -86,8 +87,8 @@ func GetAdminByID(c *gin.Context) {
 
 //AddAdmin (insert user into database)
 func AddAdmin(c *gin.Context) {
-	var user models.Administrator
-	var res models.Administrator
+	var user models.Employee
+	var res models.Employee
 	err := c.ShouldBindJSON(&user)
 	if err != nil {
 		c.JSON(500, gin.H{
@@ -97,9 +98,9 @@ func AddAdmin(c *gin.Context) {
 	}
 
 	db := conn.Connectdb()
-	rows := db.QueryRow(`insert into administrator (admin_id, admin_name, admin_password) values ($1, $2, $3) returning *;`, user.AdminID, user.AdminName, user.AdminPassword)
+	rows := db.QueryRow(`insert into employee (employee_id, employee_name, login_password) values ($1, $2, $3) returning *;`, user.EmployeeID, user.EmployeeName, user.LoginPassword)
 
-	res = models.Administrator{}
+	res = models.Employee{}
 	s := reflect.ValueOf(&res).Elem()
 	numCols := s.NumField()
 	columns := make([]interface{}, numCols)
@@ -125,7 +126,7 @@ func AddAdmin(c *gin.Context) {
 
 //LoginAdmin (authentication for user admin)
 func LoginAdmin(c *gin.Context) {
-	var user models.Administrator
+	var user models.Employee
 	err := c.ShouldBindJSON(&user)
 	if err != nil {
 		c.JSON(500, gin.H{
@@ -135,7 +136,7 @@ func LoginAdmin(c *gin.Context) {
 	}
 
 	db := conn.Connectdb()
-	rows, err := db.Query(`select admin_id from customer where admin_id = $1 and admin_password = $2`, user.AdminID, user.AdminPassword)
+	rows, err := db.Query(`select employee_id from employee where employee_id = $1 and login_password = $2`, user.EmployeeID, user.LoginPassword)
 
 	if err != nil {
 		c.JSON(500, gin.H{
@@ -170,8 +171,8 @@ func LoginAdmin(c *gin.Context) {
 
 //UpdateAdmin (update information of user admin)
 func UpdateAdmin(c *gin.Context) {
-	var user models.Administrator
-	var res models.Administrator
+	var user models.Employee
+	var res models.Employee
 	err := c.ShouldBindJSON(&user)
 	if err != nil {
 		c.JSON(500, gin.H{
@@ -181,10 +182,10 @@ func UpdateAdmin(c *gin.Context) {
 	}
 
 	db := conn.Connectdb()
-	rows := db.QueryRow(`Update administrator set admin_password = $1 where admin_id = $2 returning *;`,
-		user.AdminPassword, user.AdminID)
+	rows := db.QueryRow(`Update employee set login_password = $1 where employee_id = $2 returning *;`,
+		user.LoginPassword, user.EmployeeID)
 
-	res = models.Administrator{}
+	res = models.Employee{}
 	s := reflect.ValueOf(&res).Elem()
 	numCols := s.NumField()
 	columns := make([]interface{}, numCols)
@@ -199,14 +200,13 @@ func UpdateAdmin(c *gin.Context) {
 		})
 		return
 	}
-
 	c.JSON(200, res)
 	defer db.Close()
 }
 
 //DeleteAdmin (delete user admin in database)
 func DeleteAdmin(c *gin.Context) {
-	userID, err := strconv.Atoi(c.Param("admin_id"))
+	userID, err := strconv.Atoi(c.Param("employee_id"))
 	if err != nil {
 		c.JSON(500, gin.H{
 			"error": "ID incorrect",
@@ -215,7 +215,7 @@ func DeleteAdmin(c *gin.Context) {
 	}
 
 	db := conn.Connectdb()
-	_, error := db.Exec(`Delete from administrator where admin_id = $1`, userID)
+	_, error := db.Exec(`Delete from employee where employee_id = $1`, userID)
 
 	if error != nil {
 		c.JSON(500, gin.H{

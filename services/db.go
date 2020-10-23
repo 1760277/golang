@@ -4,15 +4,14 @@ import (
 	"database/sql"
 	"fmt"
 
-	_ "github.com/lib/pq" // postgres
+	_ "github.com/go-sql-driver/mysql"
+	// _ "github.com/lib/pq" // postgres
 )
 
 const (
-	dbhost = "localhost"
-	dbport = "5432"
-	dbuser = "postgres"
-	dbpass = "2705"
-	dbname = "dms"
+	user   = "root"
+	pass   = ""
+	dbname = "cafex"
 )
 
 var db *sql.DB
@@ -29,14 +28,21 @@ func Connectdb() *sql.DB {
 	// 	log.Fatal("Port incorrect")
 	// }
 	var err error
-	psqlInfo := fmt.Sprintf("host=%s port=%s user=%s "+
-		"password=%s dbname=%s sslmode=disable",
-		dbhost, dbport, dbuser, dbpass, dbname)
+	mysqlInfo := fmt.Sprintf("%s:%s@/%s", user, pass, dbname)
 
-	db, err = sql.Open("postgres", psqlInfo)
+	db, err = sql.Open("mysql", mysqlInfo)
 	if err != nil {
 		panic(err)
 	}
+
+	// psqlInfo := fmt.Sprintf("host=%s port=%s user=%s "+
+	// 	"password=%s dbname=%s sslmode=disable",
+	// 	dbhost, dbport, dbuser, dbpass, dbname)
+
+	// db, err = sql.Open("postgres", psqlInfo)
+	// if err != nil {
+	// 	panic(err)
+	// }
 	err = db.Ping()
 	if err != nil {
 		panic(err)
