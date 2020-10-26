@@ -1,6 +1,6 @@
 package main
 
-import "app/configs"
+import "cafex/configs"
 
 func main() {
 	r := configs.SetupRoute()

@@ -1,7 +1,7 @@
 package configs
 
 import (
-	"app/apis"
+	"cafex/apis"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"

@@ -1,8 +1,8 @@
 package apis
 
 import (
-	"app/models"
-	conn "app/services"
+	"cafex/models"
+	conn "cafex/services"
 	"log"
 	"reflect"
 

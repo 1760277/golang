@@ -1,8 +1,8 @@
 package apis
 
 import (
-	"app/models"
-	conn "app/services"
+	"cafex/models"
+	conn "cafex/services"
 	"fmt"
 	"log"
 	"net/http"
@@ -17,7 +17,7 @@ import (
 // GetAllConsumer (get all user Consumer)
 func GetAllConsumer(c *gin.Context) {
 	db := conn.Connectdb()
-	rows, err := db.Query("select consumer_id, company_id, consumer_name, phone_number_1 from consumer")
+	rows, err := db.Query("select * from consumer")
 
 	if err != nil {
 		c.JSON(500, gin.H{
@@ -100,7 +100,7 @@ func AddConsumer(c *gin.Context) {
 	}
 
 	db := conn.Connectdb()
-	rows := db.QueryRow(`insert into Consumer (consumer_id, consumer_name, consumer_password, phone_number1) values ($1, $2, $3, $4) returning *;`, user.ConsumerID, user.ConsumerName, user.CompanyID, user.Phone1)
+	rows := db.QueryRow(`insert into Consumer (consumer_id, consumer_name, consumer_password, phone_number1) values ($1, $2, $3, $4) returning *;`, user.ConsumerID, user.Name, user.CompanyID, user.Phone1)
 
 	res = models.Consumer{}
 	s := reflect.ValueOf(&res).Elem()
